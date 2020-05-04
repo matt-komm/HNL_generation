@@ -1,0 +1,3 @@
+[submodule "genproductions"]
+	path = genproductions
+	url = https://github.com/matt-komm/genproductions.git

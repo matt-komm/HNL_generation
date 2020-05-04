@@ -1,0 +1,15 @@
+set group_subprocesses Auto
+set ignore_six_quark_processes False
+set loop_optimized_output True
+set loop_color_flows False
+set gauge unitary
+set complex_mass_scheme False
+set max_npoint_for_channel 0
+import model SM_HeavyN_Dirac_CKM_Masses_LO
+define p = g u c d s b u~ c~ d~ s~ b~
+define j = g u c d s b u~ c~ d~ s~ b~
+define l = ${LEPTONS}
+define hnl = n1 n1~
+generate p p > l hnl, hnl > l j j
+output ${OUTPUT_NAME} --nojpeg
+

@@ -264,13 +264,13 @@ def widthTotal(massHNL,couplings,verbose = False):
                 
     return widthSum
     
-def findCouplingScale(massHNL,ctau,relCouplings):
+def findCouplings(massHNL,ctau,relCouplings):
     logCouplingScale = scipy.optimize.bisect(
         lambda x: ctau-ctauFromWidth(widthTotal(massHNL,{k: v*10.0**x for (k,v) in relCouplings.items()})),
         -20,
         10
     )
-    return 10.0**logCouplingScale
+    return {k: v*10.0**logCouplingScale for (k,v) in relCouplings.items()}
             
 #print "-"*60
 '''
@@ -282,9 +282,9 @@ couplings = {
 }
 '''
 
-print widthTotal(10.0,{'e':0.1,'mu':0.2,'tau':0.3},True)
-scale = findCouplingScale(10.0,1.0,{'e':1.0,'mu':0.5}) 
-print scale,ctauFromWidth(widthTotal(10.0,{'e':1.0*scale,'mu':0.5*scale}))
+#print widthTotal(20.0,{'e':0.1,'mu':0.2,'tau':0.3},True))
+#couplings = findCouplings(10.0,1.0,{'e':1.0,'mu':0.5}) 
+#print couplings,ctauFromWidth(widthTotal(10.0,couplings))
 '''
 cv = ROOT.TCanvas("cv","",800,700)
 axis = ROOT.TH2F("axis","",50,1,20,50,1e-10,1)
