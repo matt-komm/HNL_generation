@@ -11,5 +11,5 @@ define j = g u c d s b u~ c~ d~ s~ b~
 define l = ${LEPTONS}
 define hnl = n1 n1~
 generate p p > l hnl, hnl > l j j
-output ${OUTPUT_NAME} --nojpeg
+output ${OUTPUT_NAME} -nojpeg
 

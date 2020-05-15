@@ -5,6 +5,7 @@ import shutil
 import numpy
 from width import *
 import argparse
+import sys
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-o','--output', dest='output', type=str, required=True, help='output')
@@ -13,8 +14,33 @@ parser.add_argument('--massHNL', dest='massHNL', type=float, required=True, help
 parser.add_argument('--Ve', dest='Ve', type=float, default = 0.0, help='Ve coupling')
 parser.add_argument('--Vmu', dest='Vmu', type=float, default = 0.0, help='Vmu coupling')
 parser.add_argument('--Vtau', dest='Vtau', type=float, default = 0.0, help='Vtau coupling')
+parser.add_argument('--alt', dest='alt', default=[], action='append')
 args = parser.parse_args()
 
+
+print "nominal coupling: Ve=%.6e, Vmu=%.6e, Vtau=%.6e"%(args.Ve,args.Vmu,args.Vtau)
+altCouplings = []
+for altCoupling in map(lambda x: map(float,x.split(',')),args.alt):
+    print "adding alternative coupling: Ve=%.6e, Vmu=%.6e, Vtau=%.6e"%(
+        altCoupling[0],
+        altCoupling[1],
+        altCoupling[2]
+    ) 
+    if altCoupling[0]>0. and args.Ve<1e-12:
+        raise Exception("Nominal Ve coupling ("+str(args.Ve)+") too small to perform reweighting reliably")
+    if altCoupling[1]>0. and args.Vmu<1e-12:
+        raise Exception("Nominal Vmu coupling ("+str(args.Vmu)+") too small to perform reweighting reliably")
+    if altCoupling[2]>0. and args.Vtau<1e-12:
+        raise Exception("Nominal Vtau coupling ("+str(args.Vtau)+") too small to perform reweighting reliably")
+
+    altCouplings.append({
+        'e':altCoupling[0],
+        'mu':altCoupling[1],
+        'tau':altCoupling[2]
+    })
+
+
+#sys.exit(1)
 
 scriptPath = os.path.dirname(__file__)
 
@@ -104,6 +130,7 @@ def create_gridpack(
         reweightCard.write('# default coupling: Ve=%.6e, Vmu=%.6e, Vtau=%.6e\n'%(
             Ve,Vmu,Vtau
         ))
+        reweightCard.write('change rwgt_dir ./rwgt\n')
         reweightCard.write('launch\n')
         for i,altCoupling in enumerate(altCouplings):
             altVe = altCoupling['e'] if altCoupling.has_key('e') else 0.0
@@ -118,6 +145,12 @@ def create_gridpack(
             reweightCard.write('set numixing 7 %.6e\n'%(altVtau))
             reweightCard.write('launch\n')
         reweightCard.close()
+       
+    #remove potential exiting working folder from previous failed run
+    if os.path.exists(os.path.join(scriptPath,"genproductions","bin","MadGraph5_aMCatNLO",cardName)):
+        shutil.rmtree(os.path.join(scriptPath,"genproductions","bin","MadGraph5_aMCatNLO",cardName))
+    if os.path.exists(os.path.join(scriptPath,"genproductions","bin","MadGraph5_aMCatNLO",cardName+".log")):
+        shutil.rmtree(os.path.join(scriptPath,"genproductions","bin","MadGraph5_aMCatNLO",cardName+".log"))
             
     proc = subprocess.Popen(
         [
@@ -155,13 +188,14 @@ def create_gridpack(
 create_gridpack(
     cardName = args.name,
     cardOutput = os.path.join(scriptPath,'cards'),
-    gridpackOutput = args.output,#"/vols/cms/mkomm/HNL/gridpacks"
+    gridpackOutput = args.output,
     massHNL = args.massHNL,
     couplings = {
         'e': args.Ve,
         'mu': args.Vmu,
         'tau': args.Vtau
-    }
+    },
+    altCouplings = altCouplings
 )
 
 '''

@@ -55,11 +55,11 @@ date
     submitFile.close()
     
 jobCfgs = []
-    
+
 for ctau in [1e-1,1e0,1e1,1e2,1e3,1e4]:
     for mHNL in [1.,1.5, 2.,3.,4.5,6.,8.,10.,14.,20.]:
         couplings = findCouplings(mHNL,ctau,{'mu':1.0})
-        if (couplings['mu']**2)<1e-11:
+        if (couplings['mu']**2)<1e-9:
             continue
         name = ('HNL_dirac_muonly_ctau%.1e_massHNL%.1f_Vmu%.3e'%(ctau,mHNL,couplings['mu'])).replace('.','p')
         print name
@@ -72,4 +72,6 @@ for ctau in [1e-1,1e0,1e1,1e2,1e3,1e4]:
         jobCfgs.append({"cmds":[cmd]})
 
 makeSubmitFile(jobCfgs,"HNL_dirac_muonly.sh")
-    
+
+
+
