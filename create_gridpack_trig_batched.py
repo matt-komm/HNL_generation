@@ -38,6 +38,8 @@ source ~/.bashrc
     submitFile.write('''
 
 eval ${JOBS[$SGE_TASK_ID]}
+cd $TMPDIR
+echo "Working directory: "$PWD
 ls -lh
 for cmd in "${CMDS[@]}"
     do
