@@ -181,7 +181,7 @@ couplings = {
     #'tau':0.03
 }
 '''
-
+'''
 #print widthTotal(3.0,{'e':0.0007,'mu':0.0011,'tau':0.0017},False)
 #couplings = findCouplings(10.0,1.0,{'e':1.0,'mu':0.5}) 
 #print couplings,ctauFromWidth(widthTotal(10.0,couplings))
@@ -212,4 +212,6 @@ for ctau in [1e-2,1e-1,1e0,1e1,1e2,1e3,1e4]:
     print "Total width: ",widthTotal(mHNL,{'mu':0.1})#,ctauFromWidth(totalWidth),"mm"
 cv.Update()
 cv.Print("param.pdf")
+'''
+
 

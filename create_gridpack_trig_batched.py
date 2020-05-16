@@ -16,7 +16,6 @@ def makeSubmitFile(jobArrayCfg,name):
         
     submitFile = open(name,"w")
     submitFile.write('''#!/bin/bash
-#$ -cwd
 #$ -q hep.q
 #$ -l h_rt=12:00:00 
 #$ -t 1-'''+str(len(jobArrayCfg))+'''
@@ -25,7 +24,6 @@ def makeSubmitFile(jobArrayCfg,name):
 hostname
 date
 source ~/.bashrc
-cd /vols/build/cms/mkomm/HNL/HNL_generation
 ''')
 
     submitFile.write("JOBS=(\n")
@@ -64,7 +62,7 @@ for ctau in [1e-2,1e-1,1e0,1e1,1e2,1e3,1e4]:
         name = ('HNL_dirac_all_ctau%.1e_massHNL%.1f_Vall%.3e'%(ctau,mHNL,couplings['mu'])).replace('.','p').replace('+','')
         print name
         
-        cmd = "python create_gridpack.py"
+        cmd = "python /vols/build/cms/mkomm/HNL/HNL_generation/create_gridpack.py"
         cmd += " -o "+basePath
         cmd += " --name "+name
         cmd += " --massHNL %.1f"%(mHNL)

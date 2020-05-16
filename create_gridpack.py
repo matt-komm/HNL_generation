@@ -3,7 +3,7 @@ import os
 import subprocess
 import shutil
 import numpy
-from width import *
+#from width_mg import *
 import argparse
 import sys
 
@@ -64,27 +64,70 @@ def write_template(outputPath,templatePath,parameters={}):
 
 def create_gridpack(
     cardName,
-    cardOutput,
     gridpackOutput, 
     massHNL,
     couplings, 
     altCouplings = [],
     templateDir = os.path.join(os.path.dirname(__file__),"templates","HNL_dirac"),
+    cwdDir = os.getcwd()
 ):
     if os.path.exists(os.path.join(gridpackOutput,cardName+"_tarball.tar.xz")):
         print "Tarball already exists: "+os.path.join(gridpackOutput,cardName+"_tarball.tar.xz")
         print " -->>> skip"
         return
+        
+    try:
+        os.makedirs(gridpackOutput)
+    except Exception, e:
+        pass
+        
+    proc = subprocess.Popen([
+        'git',
+        'clone',
+        '--depth',
+        '1',
+        '-n',
+        'https://github.com/matt-komm/genproductions.git',
+    ],
+        shell = False,
+        cwd = cwdDir
+    )
+    proc.wait()
+    if proc.returncode!=0:
+        raise Exception("Cloning genproductions failed")
+        
+    proc = subprocess.Popen(
+        ['git','config','core.sparsecheckout','true'],
+        cwd = os.path.join(cwdDir,'genproductions'),
+        shell = False,
+    )
+    proc.wait()
+    if proc.returncode!=0:
+        raise Exception("Configure git for sparse checkout failed")
+        
+    fsparseCfg = open(os.path.join(cwdDir,'genproductions','.git','info','sparse-checkout'),'w')
+    fsparseCfg.write('bin/MadGraph5_aMCatNLO\n')
+    fsparseCfg.write('MetaData\n')
+    fsparseCfg.write('Utilities\n')
+    fsparseCfg.close()
+        
+    proc = subprocess.Popen(
+        ['git','read-tree','-vmu','HEAD'],
+        cwd = os.path.join(cwdDir,'genproductions'),
+        shell = False,
+    )
+    proc.wait()
+    if proc.returncode!=0:
+        raise Exception("Running sparse checkout failed")
+        
+    cardDir = cardName+'_cards'
+    cardOutput = os.path.join(cwdDir,'genproductions','bin','MadGraph5_aMCatNLO',cardDir)
 
     try:
         os.makedirs(cardOutput)
     except Exception, e:
         print e
         
-    try:
-        os.makedirs(gridpackOutput)
-    except Exception, e:
-        print e
     
     leptons = ""
     Ve = 0.0
@@ -145,18 +188,19 @@ def create_gridpack(
             reweightCard.write('set numixing 7 %.6e\n'%(altVtau))
             reweightCard.write('launch\n')
         reweightCard.close()
-       
+    ''' 
     #remove potential exiting working folder from previous failed run
     if os.path.exists(os.path.join(scriptPath,"genproductions","bin","MadGraph5_aMCatNLO",cardName)):
         shutil.rmtree(os.path.join(scriptPath,"genproductions","bin","MadGraph5_aMCatNLO",cardName))
     if os.path.exists(os.path.join(scriptPath,"genproductions","bin","MadGraph5_aMCatNLO",cardName+".log")):
         shutil.rmtree(os.path.join(scriptPath,"genproductions","bin","MadGraph5_aMCatNLO",cardName+".log"))
-            
+    '''
+    
     proc = subprocess.Popen(
         [
             "./gridpack_generation.sh",
             cardName,
-            os.path.join('..','..','..',cardOutput),
+            cardDir,
             "local",
             "ALL",
             "slc7_amd64_gcc630",
@@ -165,7 +209,7 @@ def create_gridpack(
         #stdout = subprocess.STDOUT,
         #stderr = subprocess.STDOUT,
         shell = False,
-        cwd = os.path.join(scriptPath,"genproductions","bin","MadGraph5_aMCatNLO"),
+        cwd = os.path.join(cwdDir,"genproductions","bin","MadGraph5_aMCatNLO"),
         #env = os.environ
     )
     proc.wait()
@@ -173,21 +217,19 @@ def create_gridpack(
     if proc.returncode!=0:
         raise Exception("Gridpack script failed")
         
-    shutil.rmtree(os.path.join(scriptPath,"genproductions","bin","MadGraph5_aMCatNLO",cardName))
     shutil.move(
-        os.path.join(scriptPath,"genproductions","bin","MadGraph5_aMCatNLO",cardName+"_slc7_amd64_gcc630_CMSSW_9_3_16_tarball.tar.xz"),
+        os.path.join(cwdDir,"genproductions","bin","MadGraph5_aMCatNLO",cardName+"_slc7_amd64_gcc630_CMSSW_9_3_16_tarball.tar.xz"),
         os.path.join(gridpackOutput,cardName+"_tarball.tar.xz")
     )
     shutil.move(
-        os.path.join(scriptPath,"genproductions","bin","MadGraph5_aMCatNLO",cardName+".log"),
+        os.path.join(cwdDir,"genproductions","bin","MadGraph5_aMCatNLO",cardName+".log"),
         os.path.join(gridpackOutput,cardName+".log")
     )
-    
+    #shutil.rmtree(os.path.join(cwdDir,"genproductions","bin","MadGraph5_aMCatNLO",cardName))
     
    
 create_gridpack(
     cardName = args.name,
-    cardOutput = os.path.join(scriptPath,'cards'),
     gridpackOutput = args.output,
     massHNL = args.massHNL,
     couplings = {
