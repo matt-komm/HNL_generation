@@ -14,7 +14,9 @@ parser.add_argument('--massHNL', dest='massHNL', type=float, required=True, help
 parser.add_argument('--Ve', dest='Ve', type=float, default = 0.0, help='Ve coupling')
 parser.add_argument('--Vmu', dest='Vmu', type=float, default = 0.0, help='Vmu coupling')
 parser.add_argument('--Vtau', dest='Vtau', type=float, default = 0.0, help='Vtau coupling')
-parser.add_argument('--alt', dest='alt', default=[], action='append')
+parser.add_argument('--alt', dest='alt', default=[], action='append',help="Alternative coupling in format: Ve,Vmu,Vtau")
+parser.add_argument('--dirac', dest='dirac', default=False, action='store_true', help="")
+parser.add_argument('--majorana', dest='majorana', default=False, action='store_true', help="")
 args = parser.parse_args()
 
 
@@ -38,7 +40,7 @@ for altCoupling in map(lambda x: map(float,x.split(',')),args.alt):
         'mu':altCoupling[1],
         'tau':altCoupling[2]
     })
-
+    
 
 #sys.exit(1)
 
@@ -69,7 +71,8 @@ def create_gridpack(
     couplings, 
     altCouplings = [],
     templateDir = os.path.join(os.path.dirname(__file__),"templates","HNL_dirac"),
-    cwdDir = os.getcwd()
+    cwdDir = os.getcwd(),
+    hnlParticles = "n1 n1~"
 ):
     if os.path.exists(os.path.join(gridpackOutput,cardName+"_tarball.tar.xz")):
         print "Tarball already exists: "+os.path.join(gridpackOutput,cardName+"_tarball.tar.xz")
@@ -84,6 +87,8 @@ def create_gridpack(
     proc = subprocess.Popen([
         'git',
         'clone',
+        '-b',
+        'localx',
         '--depth',
         '1',
         '-n',
@@ -130,24 +135,31 @@ def create_gridpack(
         
     
     leptons = ""
+    neutrinos = ""
     Ve = 0.0
     Vmu = 0.0
     Vtau = 0.0
     if couplings.has_key('e') and couplings['e']>1e-12:
         Ve = couplings['e']
         leptons += "e+ e- "
+        neutrinos += "ve ve~ "
     if couplings.has_key('mu') and couplings['mu']>1e-12:
         Vmu = couplings['mu']
         leptons += "mu+ mu- "
+        neutrinos += "vm vm~ "
     if couplings.has_key('tau') and couplings['tau']>1e-12:
         Vtau = couplings['tau']
         leptons += "ta+ ta- "
+        neutrinos += "vt vt~ "
         
+
     write_template(
         outputPath = os.path.join(cardOutput,cardName+"_proc_card.dat"),
         templatePath = os.path.join(templateDir,"proc_card.dat"),
         parameters = {
             "LEPTONS": leptons,
+            "NEUTRINOS": neutrinos,
+            "HNL": hnlParticles,
             "OUTPUT_NAME": cardName  
         }
     )
@@ -165,6 +177,11 @@ def create_gridpack(
     write_template(
         outputPath = os.path.join(cardOutput,cardName+"_run_card.dat"),
         templatePath = os.path.join(templateDir,"run_card.dat"),
+    )
+    
+    write_template(
+        outputPath = os.path.join(cardOutput,cardName+"_extramodels.dat"),
+        templatePath = os.path.join(templateDir,"extramodels.dat"),
     )
     
     #reweight to alternative couplings
@@ -226,56 +243,37 @@ def create_gridpack(
         os.path.join(gridpackOutput,cardName+".log")
     )
     #shutil.rmtree(os.path.join(cwdDir,"genproductions","bin","MadGraph5_aMCatNLO",cardName))
-    
-   
-create_gridpack(
-    cardName = args.name,
-    gridpackOutput = args.output,
-    massHNL = args.massHNL,
-    couplings = {
-        'e': args.Ve,
-        'mu': args.Vmu,
-        'tau': args.Vtau
-    },
-    altCouplings = altCouplings
-)
 
-'''
-for ctau in [1e0]:#[1e-1,1e0,1e1,1e2,1e3,1e4]:
-    for mHNL in [5.]:#[1.,1.5, 2.,3.,4.5,6.,8.,10.,14.,20.]:
-        couplings = findCouplings(mHNL,ctau,{'mu':1.0})
-        if (couplings['mu']**2)<1e-10:
-            continue
-        name = ('HNL_dirac_muonly_ctau%.1e_massHNL%.1f_Vmu%.3e'%(ctau,mHNL,couplings['mu'])).replace('.','p')
-        print name
-        
-        create_gridpack(
-            name,
-            name,
-            massHNL = mHNL,
-            couplings = couplings
-        )
-'''
-'''
-for ctau in [1e0]:#1e-1,1e0,1e1,1e2,1e3,1e4]:
-    for mHNL in [5.]:#1.,1.5, 2.,3.,4.5,6.,8.,10.,14.,20.]:
-        couplings = findCouplings(mHNL,ctau,{'e':0.5,'mu':0.5,'tau':0.5})
-        altCouplings = []
-        #use barycentric coordinates
-        for x in numpy.linspace(0,1,10):
-            for y in numpy.linspace(0,1,10):
-                l3 = 1.-l1-l2
-                altVe = l1*1.0+
-                altVmu = 
-        
-        name = ('HNL_dirac_muonly_ctau%.1e_massHNL%.1f_Vmu%.3e'%(ctau,mHNL,couplings['mu'])).replace('.','p')
-        print name
-        
-        create_gridpack(
-            name,
-            name,
-            massHNL = mHNL,
-            couplings = couplings
-        )
-'''
+   
+   
+if args.dirac:
+    create_gridpack(
+        cardName = args.name,
+        gridpackOutput = args.output,
+        massHNL = args.massHNL,
+        couplings = {
+            'e': args.Ve,
+            'mu': args.Vmu,
+            'tau': args.Vtau
+        },
+        altCouplings = altCouplings,
+        templateDir = os.path.join(os.path.dirname(__file__),"templates","HNL_dirac"),
+        hnlParticles = 'n1 n1~'
+    )
+    
+elif args.majorana:
+    create_gridpack(
+        cardName = args.name,
+        gridpackOutput = args.output,
+        massHNL = args.massHNL,
+        couplings = {
+            'e': args.Ve,
+            'mu': args.Vmu,
+            'tau': args.Vtau
+        },
+        altCouplings = altCouplings,
+        templateDir = os.path.join(os.path.dirname(__file__),"templates","HNL_majorana"),
+        hnlParticles = 'n1'
+    )
+
 
