@@ -17,6 +17,7 @@ parser.add_argument('--Vtau', dest='Vtau', type=float, default = 0.0, help='Vtau
 parser.add_argument('--alt', dest='alt', default=[], action='append',help="Alternative coupling in format: Ve,Vmu,Vtau")
 parser.add_argument('--dirac', dest='dirac', default=False, action='store_true', help="")
 parser.add_argument('--majorana', dest='majorana', default=False, action='store_true', help="")
+parser.add_argument('--branch', dest='branch', default='localx', help="genproduction branch to checkout")
 args = parser.parse_args()
 
 
@@ -72,7 +73,8 @@ def create_gridpack(
     altCouplings = [],
     templateDir = os.path.join(os.path.dirname(__file__),"templates","HNL_dirac"),
     cwdDir = os.getcwd(),
-    hnlParticles = "n1 n1~"
+    hnlParticles = "n1 n1~",
+    branch = 'localx'
 ):
     if os.path.exists(os.path.join(gridpackOutput,cardName+"_tarball.tar.xz")):
         print "Tarball already exists: "+os.path.join(gridpackOutput,cardName+"_tarball.tar.xz")
@@ -84,11 +86,12 @@ def create_gridpack(
     except Exception, e:
         pass
         
+    
     proc = subprocess.Popen([
         'git',
         'clone',
         '-b',
-        'localx',
+        branch,
         '--depth',
         '1',
         '-n',
@@ -258,7 +261,8 @@ if args.dirac:
         },
         altCouplings = altCouplings,
         templateDir = os.path.join(os.path.dirname(__file__),"templates","HNL_dirac"),
-        hnlParticles = 'n1 n1~'
+        hnlParticles = 'n1 n1~',
+        branch = args.branch
     )
     
 elif args.majorana:
@@ -273,7 +277,8 @@ elif args.majorana:
         },
         altCouplings = altCouplings,
         templateDir = os.path.join(os.path.dirname(__file__),"templates","HNL_majorana"),
-        hnlParticles = 'n1'
+        hnlParticles = 'n1',
+        branch = args.branch
     )
 
 

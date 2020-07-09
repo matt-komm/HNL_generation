@@ -203,8 +203,8 @@ for v in numpy.linspace(0,1,11):
     
     
 
-for ctau in [1e-2,1e-1,1e0,1e1,1e2,1e3,1e4]:
-    for mHNL in [1.,1.5, 2.,3.,4.5,6.,8.,10.,12.,16.,20.]:
+for ctau in [1e-0]:#,1e-1,1e0,1e1,1e2,1e3,1e4]:
+    for mHNL in [1.]:#,1.5, 2.,3.,4.5,6.,8.,10.,12.,16.,20.]:
         couplings = findCouplingsMajorana(mHNL,ctau,{'e':0.5,'mu':0.5,'tau':0.5})
         
         #use this to generate same ctau/mass points for dirac and majorana
@@ -243,8 +243,8 @@ for ctau in [1e-2,1e-1,1e0,1e1,1e2,1e3,1e4]:
                 m.Draw("Same")
         jobCfgs.append({"cmds":[cmd]})
 
-cv.Print('trig.pdf')
-makeSubmitFile(jobCfgs,"HNL_majorana_allv3.sh")
+#cv.Print('trig.pdf')
+#makeSubmitFile(jobCfgs,"HNL_majorana_allv3.sh")
 
 
 
