@@ -190,6 +190,7 @@ def create_gridpack(
     #reweight to alternative couplings
     if len(altCouplings)>0:
         reweightCard = open(os.path.join(cardOutput,cardName+"_reweight_card.dat"),'w')
+        reweightCard.write('change keep_ordering True\n') #special flag from 2.7.2 reweighting_interface.py
         reweightCard.write('# default coupling: Ve=%.6e, Vmu=%.6e, Vtau=%.6e\n'%(
             Ve,Vmu,Vtau
         ))
