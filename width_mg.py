@@ -260,7 +260,7 @@ cv.SetBottomMargin(0.12)
 cv.SetTopMargin(0.08)
 cv.SetGrid(1)
 axis = ROOT.TH2F("axis",";m#lower[0.7]{#scale[0.8]{HNL}} (GeV); |V#lower[0.7]{#scale[0.8]{Nx}}|#lower[-0.7]{#scale[0.8]{2}}",
-    50,1,20,50,1e-9,1
+    50,1,30,50,1e-9,1
 )
 cv.SetLogy(1)
 cv.SetLogx(1)
@@ -269,10 +269,10 @@ rootObj = []
 
 colors = [ROOT.kViolet,ROOT.kBlue,ROOT.kGreen+1,ROOT.kRed+1,ROOT.kOrange,ROOT.kGray,ROOT.kBlack]
 f = open('points.txt','w')
-for j,ctau in enumerate([1e-2,1e-1,1e0,1e1,1e2,1e3,1e4]):
+for j,ctau in enumerate([1e-5,1e-4,1e-3]):#,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4]):
     masses = []
     values = []
-    for mHNL in [1.,1.5, 2.,3.,4.5,6.,8.,10.,12.,16.,20.]:
+    for mHNL in [10.,12.,16.,20.,24.]:
         #couplingMu = findCouplings(mHNL,ctau,{'mu':1.0})
         couplingAll = findCouplingsMajorana(mHNL,ctau,{'e':1.0,'mu':1.0,'tau':1.0})
         coupling = couplingAll['mu']
@@ -302,8 +302,8 @@ for j,ctau in enumerate([1e-2,1e-1,1e0,1e1,1e2,1e3,1e4]):
 
 f.close()
 cv.Update()
-cv.Print("param3.pdf")
-'''
+cv.Print("param4.pdf")
 
+'''
 
 

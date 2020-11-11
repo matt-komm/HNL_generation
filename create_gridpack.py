@@ -76,11 +76,13 @@ def create_gridpack(
     hnlParticles = "n1 n1~",
     branch = 'localx'
 ):
+    
     if os.path.exists(os.path.join(gridpackOutput,cardName+"_tarball.tar.xz")):
         print "Tarball already exists: "+os.path.join(gridpackOutput,cardName+"_tarball.tar.xz")
         print " -->>> skip"
         return
-        
+    
+    
     try:
         os.makedirs(gridpackOutput)
     except Exception, e:
@@ -222,7 +224,7 @@ def create_gridpack(
             "./gridpack_generation.sh",
             cardName,
             cardDir,
-            "local",
+            "localx2",
             "ALL",
             "slc7_amd64_gcc630",
             "CMSSW_9_3_16"

@@ -1,8 +1,10 @@
 import os
 import numpy
+import barycentricCoordinates
 from width_mg import *
 
 basePath = "/vols/cms/mkomm/HNL/gridpacks/HNL_majorana_allv3"
+#basePath = "/vols/cms/mkomm/HNL/gridpacks/HNL_dirac_allv3"
 
 def makeSubmitFile(jobArrayCfg,name):
     if len(jobArrayCfg)==0:
@@ -17,7 +19,7 @@ def makeSubmitFile(jobArrayCfg,name):
     submitFile = open(name,"w")
     submitFile.write('''#!/bin/bash
 #$ -q hep.q
-#$ -l h_rt=12:00:00 
+#$ -l h_rt=14:00:00 
 #$ -t 1-'''+str(len(jobArrayCfg))+'''
 #$ -e '''+os.path.join(basePath,'log')+'''/log.$TASK_ID.err
 #$ -o '''+os.path.join(basePath,'log')+'''/log.$TASK_ID.out
@@ -203,8 +205,9 @@ for v in numpy.linspace(0,1,11):
     
     
 
-for ctau in [1e-0]:#,1e-1,1e0,1e1,1e2,1e3,1e4]:
-    for mHNL in [1.]:#,1.5, 2.,3.,4.5,6.,8.,10.,12.,16.,20.]:
+for ctau in [1e-5,1e-4,1e-3]:#,1e-1,1e0,1e1,1e2,1e3,1e4]:
+    for mHNL in [10.,12.,16.,20.,24.]:#[1.,1.5, 2.,3.,4.5,6.,8.,10.,12.,16.,20.,22.,24.5]:
+        #couplings = findCouplingsDirac(mHNL,ctau,{'e':0.5,'mu':0.5,'tau':0.5})
         couplings = findCouplingsMajorana(mHNL,ctau,{'e':0.5,'mu':0.5,'tau':0.5})
         
         #use this to generate same ctau/mass points for dirac and majorana
@@ -212,6 +215,7 @@ for ctau in [1e-0]:#,1e-1,1e0,1e1,1e2,1e3,1e4]:
         if couplingsCheck['mu']**2>1 or couplingsCheck['mu']**2<5e-9:
             continue
         #print couplings
+        #name = ('HNL_dirac_all_ctau%.1e_massHNL%.1f_Vall%.3e'%(ctau,mHNL,couplings['mu'])).replace('.','p').replace('+','')
         name = ('HNL_majorana_all_ctau%.1e_massHNL%.1f_Vall%.3e'%(ctau,mHNL,couplings['mu'])).replace('.','p').replace('+','')
         print name
         
@@ -226,25 +230,22 @@ for ctau in [1e-0]:#,1e-1,1e0,1e1,1e2,1e3,1e4]:
         
         n = 11
         cmd += " --alt %.6e,%.6e,%.6e"%(couplings['e'],couplings['mu'],couplings['tau'])
-        index=2
-        for i,l3 in enumerate(numpy.linspace(0,1,n)):
-            for l2 in numpy.linspace(0,1-l3,n-i):
-                l1 = max(0,1 - l2 - l3)
-                altCoupling = findCouplingsMajorana(mHNL,ctau,{'e':l1,'mu':l2,'tau':l3})
-                print '\t %02i fractions=%.3f,%.3f,%.3f => couplings=%.4e,%.4e,%.4e'%(
-                    index,l1,l2,l3,altCoupling['e'],altCoupling['mu'],altCoupling['tau']
-                )
-                index+=1
-                cmd += " --alt %.6e,%.6e,%.6e"%(altCoupling['e'],altCoupling['mu'],altCoupling['tau'])
-                
-                m = ROOT.TMarker(getX(l1,l2,l3),getY(l1,l2,l3),20)
-                rootObj.append(m)
-                m.SetMarkerSize(1.6)
-                m.Draw("Same")
+        for index,l1,l2,l3 in barycentricCoordinates.generate(n):
+            #altCoupling = findCouplingsDirac(mHNL,ctau,{'e':l1,'mu':l2,'tau':l3})
+            altCoupling = findCouplingsMajorana(mHNL,ctau,{'e':l1,'mu':l2,'tau':l3})
+            print '\t %02i fractions=%.3f,%.3f,%.3f => couplings=%.4e,%.4e,%.4e'%(
+                index+2,l1,l2,l3,altCoupling['e'],altCoupling['mu'],altCoupling['tau']
+            )
+            cmd += " --alt %.6e,%.6e,%.6e"%(altCoupling['e'],altCoupling['mu'],altCoupling['tau'])
+            
+            m = ROOT.TMarker(getX(l1,l2,l3),getY(l1,l2,l3),20)
+            rootObj.append(m)
+            m.SetMarkerSize(1.6)
+            m.Draw("Same")
         jobCfgs.append({"cmds":[cmd]})
 
 #cv.Print('trig.pdf')
-#makeSubmitFile(jobCfgs,"HNL_majorana_allv3.sh")
+makeSubmitFile(jobCfgs,"HNL_majorana_allv3.sh")
 
 
 
