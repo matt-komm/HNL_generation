@@ -4,6 +4,7 @@ import scipy.optimize
 import math
 import numpy
 import os
+import ctypes
 import re
 import ROOT
 
@@ -217,7 +218,7 @@ def findCouplingsMajorana(massHNL,ctau,relCouplings):
     return {k: v*10.0**logCouplingScale for (k,v) in relCouplings.items()}
             
 #print "-"*60
-
+'''
 for mHNL in [1.,1.5, 2.,2.5,3.,3.5,4.,4.5,6.,7.,8.,9.,10.,12.,14.,16.,18.,20.,22.,24.]:
     couplings = {
         'e':0.01,
@@ -236,10 +237,8 @@ for ctau in [1e-2,1,1e2]:
         couplingsDirac = findCouplingsDirac(mHNL,ctau,couplings)['e']
         couplingsMajorana = findCouplingsMajorana(mHNL,ctau,couplings)['e']
         print "%4.1e"%ctau,"%4.1f"%mHNL,"%.5f"%(couplingsDirac/couplingsMajorana)
-    
-  
-    
 '''
+
 
 ROOT.gROOT.SetBatch(True)
 ROOT.gStyle.SetOptFit(0)
@@ -252,6 +251,56 @@ ROOT.gStyle.SetLabelFont(43,"XYZ")
 ROOT.gStyle.SetLabelSize(28,"XYZ")
 ROOT.gStyle.SetTitleFont(43,"XYZ")
 ROOT.gStyle.SetTitleSize(31,"XYZ")
+  
+colors = []
+    
+def newColorRGB(red,green,blue):
+    newColorRGB.colorindex+=1
+    color=ROOT.TColor(newColorRGB.colorindex,red,green,blue)
+    colors.append(color)
+    return color
+    
+newColorRGB.colorindex=100
+
+    
+def HLS2RGB(hue,light,sat):
+    r, g, b = ctypes.c_int(), ctypes.c_int(), ctypes.c_int()
+    ROOT.TColor.HLS2RGB(
+        int(round(hue*255.)),
+        int(round(light*255.)),
+        int(round(sat*255.)),
+        r,g,b
+    )
+    return r.value/255.,g.value/255.,b.value/255.
+    
+def newColorHLS(hue,light,sat):
+    r,g,b = HLS2RGB(hue,light,sat)
+    return newColorRGB(r,g,b)
+    
+
+
+colorList = [
+    [0.,newColorHLS(0.8, 0.4,0.95)],
+    [0.,newColorHLS(0.7, 0.41,0.95)],
+    [0.,newColorHLS(0.6, 0.43,0.95)],
+    [0.,newColorHLS(0.4, 0.45,0.9)],
+    [0.,newColorHLS(0.15, 0.48,0.9)],
+    [0.,newColorHLS(0.0, 0.52,0.9)],
+]
+
+'''
+
+#stops = numpy.array(map(lambda x:x[0],colorList))
+stops = numpy.linspace(0,1,len(colorList))
+red   = numpy.array(map(lambda x:x[1].GetRed(),colorList))
+green = numpy.array(map(lambda x:x[1].GetGreen(),colorList))
+blue  = numpy.array(map(lambda x:x[1].GetBlue(),colorList))
+
+print red, green, blue
+start=ROOT.TColor.CreateGradientColorTable(len(stops), stops, red, green, blue, 10)
+print start
+ROOT.gStyle.SetNumberContours(10)
+
 
 cv = ROOT.TCanvas("cv","",800,750)
 cv.SetLeftMargin(0.14)
@@ -259,34 +308,34 @@ cv.SetRightMargin(0.04)
 cv.SetBottomMargin(0.12)
 cv.SetTopMargin(0.08)
 cv.SetGrid(1)
-axis = ROOT.TH2F("axis",";m#lower[0.7]{#scale[0.8]{HNL}} (GeV); |V#lower[0.7]{#scale[0.8]{Nx}}|#lower[-0.7]{#scale[0.8]{2}}",
-    50,1,30,50,1e-9,1
+axis = ROOT.TH2F("axis",";m#lower[0.7]{#scale[0.8]{HNL}} (GeV); |V#lower[0.7]{#scale[0.8]{e}}|#lower[-0.7]{#scale[0.8]{2}} = |V#lower[0.7]{#scale[0.8]{#mu}}|#lower[-0.7]{#scale[0.8]{2}} = |V#lower[0.7]{#scale[0.8]{#tau}}|#lower[-0.7]{#scale[0.8]{2}}",
+    50,0.8,30,50,1e-9,1
 )
 cv.SetLogy(1)
 cv.SetLogx(1)
 axis.Draw("AXIS")
 rootObj = []
 
-colors = [ROOT.kViolet,ROOT.kBlue,ROOT.kGreen+1,ROOT.kRed+1,ROOT.kOrange,ROOT.kGray,ROOT.kBlack]
+
 f = open('points.txt','w')
 for j,ctau in enumerate([1e-5,1e-4,1e-3]):#,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4]):
     masses = []
     values = []
     for mHNL in [10.,12.,16.,20.,24.]:
-        #couplingMu = findCouplings(mHNL,ctau,{'mu':1.0})
+
         couplingAll = findCouplingsMajorana(mHNL,ctau,{'e':1.0,'mu':1.0,'tau':1.0})
         coupling = couplingAll['mu']
         #print "%4.1f, %.3e, %.4e"%(mHNL,coupling,widthTotal(mHNL,{'mu':coupling}))#,ctauFromWidth(widthTotal(mHNL,{'mu':coupling}))
-        print "%.3e"%coupling
+        #print "%.3e"%coupling
         
         
         if couplingAll['mu']**2>1 or couplingAll['mu']**2<5e-9:
             continue
-        f.write('%.1e %.1f %.3e\n'%(ctau,mHNL,coupling))
+        #f.write('%.1e %.1f %.3e\n'%(ctau,mHNL,coupling))
         m = ROOT.TMarker(mHNL,coupling**2,20)
         rootObj.append(m)
         m.SetMarkerSize(1.7)
-        m.SetMarkerColor(colors[j])
+        m.SetMarkerColor(start+j)
         m.Draw("Same")
         
         masses.append(mHNL)
@@ -295,15 +344,65 @@ for j,ctau in enumerate([1e-5,1e-4,1e-3]):#,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4]):
     graph = ROOT.TGraph(len(masses),numpy.array(masses),numpy.array(values))
     graph.SetLineStyle(2)
     graph.SetLineWidth(2)
-    graph.SetLineColor(colors[j])
+    graph.SetLineColor(start+j)
     graph.Draw("L")
     rootObj.append(graph)
+    pText = ROOT.TPaveText(masses[-1],10**(math.log10(values[-1])+0.2),masses[-1],10**(math.log10(values[-1])+0.2))
+    pText.SetTextFont(43)
+    pText.SetTextSize(22)
+    pText.SetTextAlign(31)   
+    text = pText.AddText("c#tau = 10#lower[-0.7]{#scale[0.8]{%1.0f}} mm"%(math.log10(ctau)))
+    text.SetTextAngle(-40)
+    #text.SetTextColor(start+j)
+    pText.Draw("Same")
+    rootObj.append(pText)
+    
+for j,ctau in enumerate([1e-2,1e-1,1e0,1e1,1e2,1e3,1e4]):
+    masses = []
+    values = []
+    for mHNL in [1.,1.5, 2.,3.,4.5,6.,8.,10.,12.,16.,20.]:
+        #couplingAll = findCouplingsDirac(mHNL,ctau,{'e':0.5,'mu':0.5,'tau':0.5})
+        couplingAll = findCouplingsMajorana(mHNL,ctau,{'e':0.5,'mu':0.5,'tau':0.5})
+
+        coupling = couplingAll['mu']
+        #print "%4.1f, %.3e, %.4e"%(mHNL,coupling,widthTotal(mHNL,{'mu':coupling}))#,ctauFromWidth(widthTotal(mHNL,{'mu':coupling}))
+        #print "%.3e"%coupling
+        
+        couplingsCheck = findCouplingsDirac(mHNL,ctau,{'e':0.5,'mu':0.5,'tau':0.5})
+        if couplingsCheck['mu']**2>1 or couplingsCheck['mu']**2<5e-9:
+            continue
+        #f.write('%.1e %.1f %.3e\n'%(ctau,mHNL,coupling))
+        m = ROOT.TMarker(mHNL,coupling**2,20)
+        rootObj.append(m)
+        m.SetMarkerSize(1.7)
+        m.SetMarkerColor(start+3+j)
+        m.Draw("Same")
+        
+        masses.append(mHNL)
+        values.append(coupling**2)
+        
+    graph = ROOT.TGraph(len(masses),numpy.array(masses),numpy.array(values))
+    graph.SetLineStyle(2)
+    graph.SetLineWidth(2)
+    graph.SetLineColor(start+3+j)
+    graph.Draw("L")
+    rootObj.append(graph)
+    
+    pText = ROOT.TPaveText(masses[-1],10**(math.log10(values[-1])+0.2),masses[-1],10**(math.log10(values[-1])+0.2))
+    pText.SetTextFont(43)
+    pText.SetTextSize(22)
+    pText.SetTextAlign(31)   
+    text = pText.AddText("c#tau = 10#lower[-0.7]{#scale[0.8]{%1.0f}} mm"%(math.log10(ctau)))
+    text.SetTextAngle(-40)
+    #text.SetTextColor(start+3+j)
+    pText.Draw("Same")
+    rootObj.append(pText)
         
 
 f.close()
 cv.Update()
-cv.Print("param4.pdf")
-
+cv.Print("paramHNL.pdf")
+cv.Print("paramHNL.png")
 '''
 
 
