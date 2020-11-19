@@ -238,8 +238,22 @@ for ctau in [1e-2,1,1e2]:
         couplingsMajorana = findCouplingsMajorana(mHNL,ctau,couplings)['e']
         print "%4.1e"%ctau,"%4.1f"%mHNL,"%.5f"%(couplingsDirac/couplingsMajorana)
 '''
+'''
+def formatExp(v):
+    n = int(math.floor(math.log10(v)))
+    return v/10**n,n
+    
+for m in [1.,1.5, 2.,2.5,3.,3.5,4.,4.5,6.,7.,8.,9.,10.,12.,14.,16.,18.,20.,22.,24.]:
+    wD_e = widthTotalDirac(m,{"e":1.0})
+    wD_mu = widthTotalDirac(m,{"mu":1.0})
+    wD_tau = widthTotalDirac(m,{"tau":1.0})
 
-
+    wM_e = widthTotalMajorana(m,{"e":1.0})
+    wM_mu = widthTotalMajorana(m,{"mu":1.0})
+    wM_tau = widthTotalMajorana(m,{"tau":1.0})
+    
+    print ("%4.1f & %.3f&$10^{%3i}$ & %.3f&$10^{%3i}$ & %.3f&$10^{%3i}$ \\\\"%((m,)+formatExp(wD_e)+formatExp(wD_mu)+formatExp(wD_tau))).replace('.','&')#,wD_mu,wD_tau (wM_e/wD_e)
+'''
 ROOT.gROOT.SetBatch(True)
 ROOT.gStyle.SetOptFit(0)
 ROOT.gStyle.SetOptDate(0)
