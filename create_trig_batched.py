@@ -97,8 +97,8 @@ def getY(ve,vmu,vtau):
     return y
 
 axis1 = ROOT.TGaxis(
-    getX(0,1,0),getY(0,1,0),
-    getX(1,0,0),getY(1,0,0),
+    getX(0,1,0),getY(0,1.0,0),
+    getX(1,0,0),getY(1.0,0,0),
     0.0,1,
     512,"+U"
 )
@@ -108,17 +108,17 @@ axis1.Draw()
 
 axis1L = ROOT.TGaxis(
     
-    getX(0,1,0),getY(0,1,0),
-    getX(1,0,0),getY(1,0,0),
+    getX(0,1,0),getY(0,1.0,0),
+    getX(1,0,0),getY(1.0,0,0),
     0.0,1,
     512,"-S"
 )
 applyAxisStyle(axis1L)
 axis1L.SetTickSize(0.0)
 axis1L.SetLabelOffset(0.0)
-axis1L.SetTitleOffset(1.7)
-axis1L.SetTitle("f#lower[0.3]{#scale[0.8]{e#mu}}")##times|V#lower[0.3]{#scale[0.8]{e}}|#lower[-0.7]{#scale[0.8]{2}}+(1-f#lower[0.3]{#scale[0.8]{e#mu}})#times|V#lower[0.3]{#scale[0.8]{#mu}}|#lower[-0.7]{#scale[0.8]{2}}")
-axis1L.SetLabelOffset(0.04)
+axis1L.SetTitleOffset(1.4)
+axis1L.SetTitle("f#lower[0.3]{#scale[0.8]{e}}")##times|V#lower[0.3]{#scale[0.8]{e}}|#lower[-0.7]{#scale[0.8]{2}}+(1-f#lower[0.3]{#scale[0.8]{e#mu}})#times|V#lower[0.3]{#scale[0.8]{#mu}}|#lower[-0.7]{#scale[0.8]{2}}")
+axis1L.SetLabelOffset(0.01)
 axis1L.Draw()
 
 
@@ -144,7 +144,7 @@ applyAxisStyle(axis2L)
 axis2L.SetTickSize(0.0)
 axis2L.SetTitleOffset(1.75)
 axis2L.SetLabelOffset(0.07)
-axis2L.SetTitle("f#lower[0.3]{#scale[0.8]{#mu#tau}}")##times|V#lower[0.3]{#scale[0.8]{#mu}}|#lower[-0.7]{#scale[0.8]{2}}+(1-f#lower[0.3]{#scale[0.8]{#mu#tau}})#times|V#lower[0.3]{#scale[0.8]{#tau}}|#lower[-0.7]{#scale[0.8]{2}}")
+axis2L.SetTitle("f#lower[0.3]{#scale[0.8]{#mu}}")##times|V#lower[0.3]{#scale[0.8]{#mu}}|#lower[-0.7]{#scale[0.8]{2}}+(1-f#lower[0.3]{#scale[0.8]{#mu#tau}})#times|V#lower[0.3]{#scale[0.8]{#tau}}|#lower[-0.7]{#scale[0.8]{2}}")
 axis2L.Draw()
 
 
@@ -169,7 +169,7 @@ applyAxisStyle(axis3L)
 axis3L.SetTickSize(0.0)
 axis3L.SetTitleOffset(1.75)
 axis3L.SetLabelOffset(0.07)
-axis3L.SetTitle("f#lower[0.3]{#scale[0.8]{e#tau}}")##times|V#lower[0.3]{#scale[0.8]{e}}|#lower[-0.7]{#scale[0.8]{2}}+(1-f#lower[0.3]{#scale[0.8]{e#tau}})#times|V#lower[0.3]{#scale[0.8]{#tau}}|#lower[-0.7]{#scale[0.8]{2}}")
+axis3L.SetTitle("f#lower[0.3]{#scale[0.8]{#tau}}")##times|V#lower[0.3]{#scale[0.8]{e}}|#lower[-0.7]{#scale[0.8]{2}}+(1-f#lower[0.3]{#scale[0.8]{e#tau}})#times|V#lower[0.3]{#scale[0.8]{#tau}}|#lower[-0.7]{#scale[0.8]{2}}")
 axis3L.Draw()
 
 rootObj = []
@@ -205,8 +205,8 @@ for v in numpy.linspace(0,1,11):
     
     
 
-for ctau in [1e-5,1e-4,1e-3]:#,1e-1,1e0,1e1,1e2,1e3,1e4]:
-    for mHNL in [10.,12.,16.,20.,24.]:#[1.,1.5, 2.,3.,4.5,6.,8.,10.,12.,16.,20.,22.,24.5]:
+for ctau in [1e0]:#[1e-5,1e-4,1e-3]:#,1e-1,1e0,1e1,1e2,1e3,1e4]:
+    for mHNL in [10.]:#[10.,12.,16.,20.,24.]:#[1.,1.5, 2.,3.,4.5,6.,8.,10.,12.,16.,20.,22.,24.5]:
         #couplings = findCouplingsDirac(mHNL,ctau,{'e':0.5,'mu':0.5,'tau':0.5})
         couplings = findCouplingsMajorana(mHNL,ctau,{'e':0.5,'mu':0.5,'tau':0.5})
         
@@ -242,10 +242,36 @@ for ctau in [1e-5,1e-4,1e-3]:#,1e-1,1e0,1e1,1e2,1e3,1e4]:
             rootObj.append(m)
             m.SetMarkerSize(1.6)
             m.Draw("Same")
+            '''
+            pText = ROOT.TPaveText(getX(l1,l2,l3)-0.01,getY(l1,l2,l3)-0.01,getX(l1,l2,l3)-0.01,getY(l1,l2,l3)-0.01)
+            pText.SetTextFont(43)
+            pText.SetTextSize(20)
+            pText.SetTextAlign(33)
+            pText.AddText("%.1f"%(altCoupling['e']/couplings['e']))
+            pText.Draw("Same")
+            rootObj.append(pText)
+            
+            pText = ROOT.TPaveText(getX(l1,l2,l3)+0.01,getY(l1,l2,l3)-0.01,getX(l1,l2,l3)+0.01,getY(l1,l2,l3)-0.01)
+            pText.SetTextFont(43)
+            pText.SetTextSize(20)
+            pText.SetTextAlign(13)
+            pText.AddText("%.1f"%(altCoupling['mu']/couplings['mu']))
+            pText.Draw("Same")
+            rootObj.append(pText)
+            
+            pText = ROOT.TPaveText(getX(l1,l2,l3),getY(l1,l2,l3)+0.01,getX(l1,l2,l3),getY(l1,l2,l3)+0.01)
+            pText.SetTextFont(43)
+            pText.SetTextSize(20)
+            pText.SetTextAlign(21)
+            pText.AddText("%.1f"%(altCoupling['tau']/couplings['tau']))
+            pText.Draw("Same")
+            rootObj.append(pText)
+            '''
         jobCfgs.append({"cmds":[cmd]})
 
-#cv.Print('trig.pdf')
-makeSubmitFile(jobCfgs,"HNL_majorana_allv3.sh")
+cv.Print('paramWeights.pdf')
+cv.Print('paramWeights.png')
+#makeSubmitFile(jobCfgs,"HNL_majorana_allv3.sh")
 
 
 

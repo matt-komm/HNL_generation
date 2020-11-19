@@ -254,6 +254,28 @@ for m in [1.,1.5, 2.,2.5,3.,3.5,4.,4.5,6.,7.,8.,9.,10.,12.,14.,16.,18.,20.,22.,2
     
     print ("%4.1f & %.3f&$10^{%3i}$ & %.3f&$10^{%3i}$ & %.3f&$10^{%3i}$ \\\\"%((m,)+formatExp(wD_e)+formatExp(wD_mu)+formatExp(wD_tau))).replace('.','&')#,wD_mu,wD_tau (wM_e/wD_e)
 '''
+
+#cAll = findCouplingsDirac(10.,1.,{"e":1.,"mu":1.,"tau":1.})
+#print cAll
+#wD_All = widthTotalDirac(10.,cAll)
+Ae = widthTotalDirac(10.,{"e":1.})
+Amu = widthTotalDirac(10.,{"mu":1.})
+Atau = widthTotalDirac(10.,{"tau":1.})
+
+fe= 0.4
+fmu= 0.6
+ftau=1-fe-fmu
+G = 10.
+v = math.sqrt(G/(Ae*fe**2+Amu*fmu**2+Atau*ftau**2))
+print G,widthTotalDirac(10.,{'e':v*fe, 'mu': v*fmu, 'tau': v*ftau})
+
+
+
+
+
+
+
+
 ROOT.gROOT.SetBatch(True)
 ROOT.gStyle.SetOptFit(0)
 ROOT.gStyle.SetOptDate(0)
