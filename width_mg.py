@@ -74,6 +74,7 @@ def getPartialWidthsFromParamCard(card,massHNL):
                 l
             )
             if mDecay:
+                
                 ids = sorted([
                     abs(int(mDecay.groups()[1])),
                     abs(int(mDecay.groups()[2])),
@@ -84,6 +85,7 @@ def getPartialWidthsFromParamCard(card,massHNL):
                     'ids':ids,
                     'width':partialWidth
                 })
+                #print l,ids,partialWidth
                 
     if hnlMass<0:
         raise Exception("HNL mass not found in file "+card)
@@ -92,7 +94,28 @@ def getPartialWidthsFromParamCard(card,massHNL):
     
     
 def groupWidthByFlavor(partialWidths,verbose=False):
-    widthPerFlavor = {11: 0.0, 13: 0.0, 15: 0.0}
+    widthPerFlavor = {
+        'nuqq': {
+            11: {11: 0.0, 22: 0.0, 33: 0.0, 44: 0.0, 55: 0.0},
+            13: {11: 0.0, 22: 0.0, 33: 0.0, 44: 0.0, 55: 0.0},
+            15: {11: 0.0, 22: 0.0, 33: 0.0, 44: 0.0, 55: 0.0},
+        },  
+        'lqq' : {
+            11: {12:0.0, 34: 0.0, 14: 0.0, 23: 0.0, 51: 0.0, 53: 0.0},
+            13: {12:0.0, 34: 0.0, 14: 0.0, 23: 0.0, 51: 0.0, 53: 0.0},
+            15: {12:0.0, 34: 0.0, 14: 0.0, 23: 0.0, 51: 0.0, 53: 0.0},
+        },
+        'null': {
+            11: {11: 0.0, 13: 0.0, 15:0.0},
+            13: {11: 0.0, 13: 0.0, 15:0.0},
+            15: {11: 0.0, 13: 0.0, 15:0.0},
+        },
+        'nununu': {
+            11: {11: 0.0, 13: 0.0, 15:0.0},
+            13: {11: 0.0, 13: 0.0, 15:0.0},
+            15: {11: 0.0, 13: 0.0, 15:0.0},
+        }
+    }
     
     processed = 0
     
@@ -103,21 +126,21 @@ def groupWidthByFlavor(partialWidths,verbose=False):
             for lflavor2 in [11,13,15]:
                 #L LNU (note: if lflavor==lflavor2 then NC possible)
                 if lflavor!=lflavor2 and partialWidth['ids'] == sorted([lflavor,lflavor2,lflavor2+1]):
-                    widthPerFlavor[lflavor] += partialWidth['width']
+                    widthPerFlavor['null'][lflavor][lflavor2] += partialWidth['width']
                     if verbose:
                         print 'lnu',lflavor,
                     processed+=1
                 
                 #NU LL
                 if partialWidth['ids'] == sorted([lflavor+1,lflavor2,lflavor2]):
-                    widthPerFlavor[lflavor] += partialWidth['width']
+                    widthPerFlavor['null'][lflavor][lflavor2] += partialWidth['width']
                     if verbose:
                         print 'null',lflavor,
                     processed+=1
                 
                 #NU NU NU 
                 if partialWidth['ids'] == sorted([lflavor+1,lflavor2+1,lflavor2+1]):
-                    widthPerFlavor[lflavor] += partialWidth['width']
+                    widthPerFlavor['nununu'][lflavor][lflavor2] += partialWidth['width']
                     if verbose:
                         print 'nununu',lflavor,
                     processed+=1
@@ -129,14 +152,14 @@ def groupWidthByFlavor(partialWidths,verbose=False):
                         continue
                     #L QQ (note: qflavor==qflavor2 not possible)
                     if qflavor!=qflavor2 and partialWidth['ids'] == sorted([lflavor,qflavor,qflavor2]):
-                        widthPerFlavor[lflavor] += partialWidth['width']
+                        widthPerFlavor['lqq'][lflavor][qflavor+qflavor2*10] += partialWidth['width']
                         if verbose:
                             print 'lqq',lflavor,
                         processed+=1
                         
                     #NU QQ (note: only qflavor==qflavor2 possible) 
                     if qflavor==qflavor2 and partialWidth['ids'] == sorted([lflavor+1,qflavor,qflavor2]):
-                        widthPerFlavor[lflavor] += partialWidth['width']
+                        widthPerFlavor['nuqq'][lflavor][qflavor+qflavor2*10] += partialWidth['width']
                         if verbose:
                             print 'nuqq',lflavor,
                         processed+=1
@@ -160,11 +183,14 @@ def widthTotalDirac(massHNL,couplings,verbose = False):
                        
     widthSum = 0.
     if couplings.has_key('e'):
-        widthSum += couplings['e']**2*widthPerFlavor[11]/0.1**2
+        for k,v in widthPerFlavor.iteritems():
+            widthSum += couplings['e']**2*sum(v[11].values())/0.1**2
     if couplings.has_key('mu'):
-        widthSum += couplings['mu']**2*widthPerFlavor[13]/0.1**2
+        for k,v in widthPerFlavor.iteritems():
+            widthSum += couplings['mu']**2*sum(v[13].values())/0.1**2
     if couplings.has_key('tau'):
-        widthSum += couplings['tau']**2*widthPerFlavor[15]/0.1**2
+        for k,v in widthPerFlavor.iteritems():
+            widthSum += couplings['tau']**2*sum(v[15].values())/0.1**2
                     
     return widthSum
     
@@ -186,11 +212,14 @@ def widthTotalMajorana(massHNL,couplings,verbose = False):
                        
     widthSum = 0.
     if couplings.has_key('e'):
-        widthSum += couplings['e']**2*widthPerFlavor[11]/0.1**2
+        for k,v in widthPerFlavor.iteritems():
+            widthSum += couplings['e']**2*sum(v[11].values())/0.1**2
     if couplings.has_key('mu'):
-        widthSum += couplings['mu']**2*widthPerFlavor[13]/0.1**2
+        for k,v in widthPerFlavor.iteritems():
+            widthSum += couplings['mu']**2*sum(v[13].values())/0.1**2
     if couplings.has_key('tau'):
-        widthSum += couplings['tau']**2*widthPerFlavor[15]/0.1**2
+        for k,v in widthPerFlavor.iteritems():
+            widthSum += couplings['tau']**2*sum(v[15].values())/0.1**2
                     
     return widthSum
     
@@ -217,6 +246,108 @@ def findCouplingsMajorana(massHNL,ctau,relCouplings):
     )
     return {k: v*10.0**logCouplingScale for (k,v) in relCouplings.items()}
             
+
+totW = [
+    widthTotalDirac(1.,{"e":0.1,"mu":0.1,'tau':0.1}),
+    widthTotalDirac(5.,{"e":0.1,"mu":0.1,'tau':0.1}),
+    widthTotalDirac(10.,{"e":0.1,"mu":0.1,'tau':0.1}),
+    widthTotalDirac(20.,{"e":0.1,"mu":0.1,'tau':0.1})
+]
+partW = [
+    groupWidthByFlavor(getPartialWidthsFromParamCard(
+        os.path.join(scriptPath,'templates','HNL_dirac','params0p1','param_card_massHNL%.1f.dat'%(1.0)),
+        1.0
+    )),
+    groupWidthByFlavor(getPartialWidthsFromParamCard(
+        os.path.join(scriptPath,'templates','HNL_dirac','params0p1','param_card_massHNL%.1f.dat'%(5.0)),
+        5.0
+    )),
+    groupWidthByFlavor(getPartialWidthsFromParamCard(
+        os.path.join(scriptPath,'templates','HNL_dirac','params0p1','param_card_massHNL%.1f.dat'%(10.0)),
+        10.0
+    )),
+    groupWidthByFlavor(getPartialWidthsFromParamCard(
+        os.path.join(scriptPath,'templates','HNL_dirac','params0p1','param_card_massHNL%.1f.dat'%(20.0)),
+        20.0
+    )),
+]
+
+def sumBR(group,l=None,p=None):
+    brs = numpy.zeros(len(totW))
+    for i in range(len(totW)):
+        if l==None:
+            brs[i] = 100.*sum(map(lambda x: sum(x.values()),partW[i][group].values()))/totW[i]
+        elif p==None:
+            brs[i] = 100.*sum(partW[i][group][l].values())/totW[i]
+        else:
+            brs[i] = 100.*partW[i][group][l][p]/totW[i]
+    return brs
+    
+
+
+def brStr(sumBR):
+    s = ""
+    for i in range(len(totW)):
+        if sumBR[i]<1e-8:
+            s+= "& %22s "%('\\multicolumn{2}{c}{-}')
+        else:
+            s+= ("& %20.1f\\%% "%(sumBR[i])).replace('.','&')
+    return s+"  \\\\"
+
+texSym = {
+    9: '\\Plm',  -9: '\\Plp', 11:'\\Pem', -11: '\\Pep', 13: '\\PGmm', -13: '\\PGmp', 15: '\\PGtm', -15: '\\PGtp',
+    10: '\\PGn', -10: '\\PAGn', 12:'\\PGne', -12: '\\PAGne', 14: '\\PGnGm', -14: '\\PAGnGm', 16: '\\PGnGt', -16: '\\PAGnGt',
+    7: '\\PQq', -7: '\\PAQq', 1: '\\PQd', -1: '\\PAQd', 2: '\\PQu', -2: '\\PAQu', 3: '\\PQd', -3: '\\PAQd', 4: '\\PQc', -4: '\\PAQc', 5: '\\PQb', -5: '\\PAQb',
+}
+    
+def texDecay(l1,l2,l3):
+    return '$\\mathrm{N}_{1}\\to'+texSym[l1]+texSym[l2]+texSym[l3]+"$"
+    
+
+print "%40s"%(texDecay(9,7,-7)),brStr(sumBR('lqq'))
+print    
+print "%40s"%(texDecay(11,2,-1)),brStr(sumBR('lqq',11,12))
+print "%40s"%(texDecay(13,2,-1)),brStr(sumBR('lqq',13,12))
+print "%40s"%(texDecay(15,2,-1)),brStr(sumBR('lqq',15,12))
+print
+print "%40s"%(texDecay(11,4,-3)),brStr(sumBR('lqq',11,34))
+print "%40s"%(texDecay(13,4,-3)),brStr(sumBR('lqq',13,34))
+print "%40s"%(texDecay(15,4,-3)),brStr(sumBR('lqq',15,34))
+print
+print "%40s"%(texDecay(10,7,-7)),brStr(sumBR('nuqq'))
+print
+print "%40s"%(texDecay(10,1,-1)),brStr(sumBR('nuqq',11,11)+sumBR('nuqq',13,11)+sumBR('nuqq',15,11))
+print "%40s"%(texDecay(10,2,-2)),brStr(sumBR('nuqq',11,22)+sumBR('nuqq',13,22)+sumBR('nuqq',15,22))
+print "%40s"%(texDecay(10,3,-3)),brStr(sumBR('nuqq',11,33)+sumBR('nuqq',13,33)+sumBR('nuqq',15,33))
+print "%40s"%(texDecay(10,4,-4)),brStr(sumBR('nuqq',11,44)+sumBR('nuqq',13,44)+sumBR('nuqq',15,44))
+print "%40s"%(texDecay(10,5,-5)),brStr(sumBR('nuqq',11,55)+sumBR('nuqq',13,55)+sumBR('nuqq',15,55))
+print
+print "%40s"%(texDecay(9,-9,10)),brStr(sumBR('null'))
+print
+print "%40s"%(texDecay(11,-11,12)),brStr(sumBR('null',11,11))
+print "%40s"%(texDecay(11,-13,14)),brStr(sumBR('null',11,13))
+print "%40s"%(texDecay(11,-15,16)),brStr(sumBR('null',11,15))
+print
+print "%40s"%(texDecay(13,-11,12)),brStr(sumBR('null',13,11))
+print "%40s"%(texDecay(13,-13,14)),brStr(sumBR('null',13,13))
+print "%40s"%(texDecay(13,-15,16)),brStr(sumBR('null',13,15))
+print
+print "%40s"%(texDecay(15,-11,12)),brStr(sumBR('null',15,11))
+print "%40s"%(texDecay(15,-13,14)),brStr(sumBR('null',15,13))
+print "%40s"%(texDecay(15,-15,16)),brStr(sumBR('null',15,15))
+print
+print "%40s"%(texDecay(10,-10,10)),brStr(sumBR('nununu'))
+'''
+for k,g in groupWidthByFlavor(getPartialWidthsFromParamCard(
+    os.path.join(scriptPath,'templates','HNL_dirac','params0p1','param_card_massHNL%.1f.dat'%(1.0)),
+    1.0
+)).iteritems():
+    print '%5s: %.1f%%'%(k, 100.*sum(map(lambda x: sum(x.values()),g.values()))/tot)
+    for l,v in g.iteritems():
+        print '   %2s: %.4e (%.1f%%)'%(l,sum(v.values()),100.*sum(v.values())/tot)
+        for x,w in v.iteritems():
+            print '      %2s: %.4e (%.1f%%)'%(x,w,100.*w/tot)
+'''
 #print "-"*60
 '''
 for mHNL in [1.,1.5, 2.,2.5,3.,3.5,4.,4.5,6.,7.,8.,9.,10.,12.,14.,16.,18.,20.,22.,24.]:
@@ -238,6 +369,7 @@ for ctau in [1e-2,1,1e2]:
         couplingsMajorana = findCouplingsMajorana(mHNL,ctau,couplings)['e']
         print "%4.1e"%ctau,"%4.1f"%mHNL,"%.5f"%(couplingsDirac/couplingsMajorana)
 '''
+
 '''
 def formatExp(v):
     n = int(math.floor(math.log10(v)))
@@ -258,6 +390,7 @@ for m in [1.,1.5, 2.,2.5,3.,3.5,4.,4.5,6.,7.,8.,9.,10.,12.,14.,16.,18.,20.,22.,2
 #cAll = findCouplingsDirac(10.,1.,{"e":1.,"mu":1.,"tau":1.})
 #print cAll
 #wD_All = widthTotalDirac(10.,cAll)
+'''
 Ae = widthTotalDirac(10.,{"e":1.})
 Amu = widthTotalDirac(10.,{"mu":1.})
 Atau = widthTotalDirac(10.,{"tau":1.})
@@ -268,7 +401,7 @@ ftau=1-fe-fmu
 G = 10.
 v = math.sqrt(G/(Ae*fe**2+Amu*fmu**2+Atau*ftau**2))
 print G,widthTotalDirac(10.,{'e':v*fe, 'mu': v*fmu, 'tau': v*ftau})
-
+'''
 
 
 
