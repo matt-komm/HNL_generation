@@ -457,7 +457,7 @@ colorList = [
     [0.,newColorHLS(0.0, 0.52,0.9)],
 ]
 
-'''
+
 
 #stops = numpy.array(map(lambda x:x[0],colorList))
 stops = numpy.linspace(0,1,len(colorList))
@@ -465,6 +465,7 @@ red   = numpy.array(map(lambda x:x[1].GetRed(),colorList))
 green = numpy.array(map(lambda x:x[1].GetGreen(),colorList))
 blue  = numpy.array(map(lambda x:x[1].GetBlue(),colorList))
 
+#!!! use ROOT from CMSSW if red color is not set properly !!!
 print red, green, blue
 start=ROOT.TColor.CreateGradientColorTable(len(stops), stops, red, green, blue, 10)
 print start
@@ -477,7 +478,7 @@ cv.SetRightMargin(0.04)
 cv.SetBottomMargin(0.12)
 cv.SetTopMargin(0.08)
 cv.SetGrid(1)
-axis = ROOT.TH2F("axis",";m#lower[0.7]{#scale[0.8]{HNL}} (GeV); |V#lower[0.7]{#scale[0.8]{e}}|#lower[-0.7]{#scale[0.8]{2}} = |V#lower[0.7]{#scale[0.8]{#mu}}|#lower[-0.7]{#scale[0.8]{2}} = |V#lower[0.7]{#scale[0.8]{#tau}}|#lower[-0.7]{#scale[0.8]{2}}",
+axis = ROOT.TH2F("axis",";m#lower[0.7]{#scale[0.8]{Majorana HNL}} (GeV); |V#lower[0.7]{#scale[0.8]{e}}|#lower[-0.7]{#scale[0.8]{2}} = |V#lower[0.7]{#scale[0.8]{#mu}}|#lower[-0.7]{#scale[0.8]{2}} = |V#lower[0.7]{#scale[0.8]{#tau}}|#lower[-0.7]{#scale[0.8]{2}}",
     50,0.8,30,50,1e-9,1
 )
 cv.SetLogy(1)
@@ -493,6 +494,7 @@ for j,ctau in enumerate([1e-5,1e-4,1e-3]):#,1e-2,1e-1,1e0,1e1,1e2,1e3,1e4]):
     for mHNL in [10.,12.,16.,20.,24.]:
 
         couplingAll = findCouplingsMajorana(mHNL,ctau,{'e':1.0,'mu':1.0,'tau':1.0})
+        #couplingAll = findCouplingsDirac(mHNL,ctau,{'e':1.0,'mu':1.0,'tau':1.0})
         coupling = couplingAll['mu']
         #print "%4.1f, %.3e, %.4e"%(mHNL,coupling,widthTotal(mHNL,{'mu':coupling}))#,ctauFromWidth(widthTotal(mHNL,{'mu':coupling}))
         #print "%.3e"%coupling
@@ -566,12 +568,19 @@ for j,ctau in enumerate([1e-2,1e-1,1e0,1e1,1e2,1e3,1e4]):
     #text.SetTextColor(start+3+j)
     pText.Draw("Same")
     rootObj.append(pText)
-        
+    
+    
+pTextHNL = ROOT.TPaveText(0.14,0.97,0.14,0.97,"NDC")
+pTextHNL.SetTextFont(43)
+pTextHNL.SetTextSize(30)
+pTextHNL.SetTextAlign(13)
+pTextHNL.AddText("Majorana HNL")
+pTextHNL.Draw("Same")
 
 f.close()
 cv.Update()
 cv.Print("paramHNL.pdf")
 cv.Print("paramHNL.png")
-'''
+
 
 
